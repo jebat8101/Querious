@@ -6,6 +6,7 @@ import datetime
 from dotenv import load_dotenv
 from telethon.sync import TelegramClient
 from telethon.errors.rpcerrorlist import PhoneNumberBannedError, UsernameInvalidError
+from telethon import functions, types
 
 # Define the base directory for storage inside `/home/elk/tools/tele/`
 BASE_DIR = "/home/elk/tools/tele"
@@ -40,8 +41,22 @@ def telegram_scraper_main():
     async def check_phone(phone):
         async with TelegramClient(SESSION_FILE, api_id, api_hash) as client:
             try:
-                user = await client.get_entity(phone)
-                return user.to_dict()
+                # 1. Add the phone number as a contact
+                result = await client(functions.contacts.ImportContactsRequest(
+                    contacts=[types.InputPhoneContact(client_id=0, phone=phone, first_name="Temp", last_name="User")]
+                ))
+                if result.users:
+                    user = result.users[0]
+                    # 2. Remove the contact immediately
+                    await client(functions.contacts.DeleteContactsRequest(id=[user.id]))
+                    # Extract real first and last name and username from Telegram profile
+                    user_info = user.to_dict()
+                    user_info['first_name'] = user.first_name
+                    user_info['last_name'] = user.last_name
+                    user_info['username'] = user.username
+                    return user_info
+                else:
+                    return {"error": "No user found for this phone number"}
             except PhoneNumberBannedError:
                 return {"error": "Phone number is banned"}
             except Exception as e:
@@ -129,3 +144,14 @@ def telegram_scraper_main():
 
 if __name__ == "__main__":
     telegram_scraper_main()
+
+
+
+
+
+
+
+
+
+
+

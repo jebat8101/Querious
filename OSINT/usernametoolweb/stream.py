@@ -85,8 +85,7 @@ class UsernameOSINT:
         return list(found_emails) 
 
 def username_osint_main(): 
-    """ Streamlit interface for OSINT Username Finder. """
-    st.title("🔍 OSINT Username Finder")  # Removed st.set_page_config()
+    st.title("🔍 OSINT Username Finder")
     st.write(
         "This tool helps investigators, cybersecurity professionals, and researchers gather "
         "open-source intelligence (OSINT) on a specific username. It scans multiple platforms "
@@ -94,13 +93,11 @@ def username_osint_main():
         "to the provided username."
     )
 
+    username = st.text_input("Enter a username to search", help="Input the username to find associated profiles and contact details.")
+    search_social = st.checkbox("Search Social Media", value=True)
+    search_contacts = st.checkbox("Search Emails and WhatsApp", value=True)
 
-    st.sidebar.header("Search Options") 
-    username = st.sidebar.text_input("Enter a username to search", help="Input the username to find associated profiles and contact details.") 
-    search_social = st.sidebar.checkbox("Search Social Media", value=True) 
-    search_contacts = st.sidebar.checkbox("Search Emails and WhatsApp", value=True) 
-
-    if st.sidebar.button("Start Search"): 
+    if st.button("Start Search"): 
         if username: 
             osint = UsernameOSINT(username) 
             if search_social: 
@@ -144,10 +141,8 @@ def username_osint_main():
         else: 
             st.warning("Please enter a username to search.") 
 
-# Footer with Copyright
     st.markdown("""
     ---
     © 2025, All rights reserved. Developed by ECLOGIC.
     """)
-
 

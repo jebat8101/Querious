@@ -18,8 +18,8 @@ def homepage():
 
     # Define categories and tools
     categories = {
-        "📞 Phone Number": ["Phone Validation Application"],
-        "📱 Social Media": ["Social Media Search Application", "Wayback Tweets", "Telegram Phone Checker"],
+        "📞 Phone Number": ["Phone Validation Application", "Telegram Phone Checker"],
+        "📱 Social Media": ["Social Media Search Application", "Wayback Tweets"],
         "📧 Email": ["Email Verification Application", "GHunt OSINT Tool"],
         "🔍 Username": ["Sherlock", "Username Search App"],
         "🌍 Information Lookup": ["Hawker OSINT"],

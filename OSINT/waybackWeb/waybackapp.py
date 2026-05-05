@@ -1,6 +1,13 @@
+import base64
+from datetime import datetime, timedelta
+
 import streamlit as st
 import pandas as pd
-from waybacktweets import WaybackTweets, TweetsParser
+import streamlit.components.v1 as components
+
+from waybacktweets import WaybackTweets, TweetsParser, TweetsExporter
+from waybacktweets.api.visualize import HTMLTweetsVisualizer
+from waybacktweets.config import FIELD_OPTIONS, config
 
 def wayback_tweets_main():
     # ----- Streamlit App Title -----
@@ -21,7 +28,6 @@ def wayback_tweets_main():
 
     # ----- Query Button -----
     if st.button("Query Tweets"):
-        # Basic validation
         if not username:
             st.error("Please enter a valid Twitter username.")
         elif start_date > end_date:
@@ -29,66 +35,75 @@ def wayback_tweets_main():
         else:
             st.info("Fetching archived tweets. Please wait...")
             try:
-                # 1. Fetch data from WaybackTweets
-                api = WaybackTweets(username)
-                archived_tweets = api.get()  # Returns a list of archived tweets
+                collapse = None
+                matchtype = None
+                timestamp_from = datetime.combine(start_date, datetime.min.time())
+                timestamp_to = datetime.combine(end_date, datetime.max.time())
+
+                response = WaybackTweets(
+                    username,
+                    collapse,
+                    timestamp_from,
+                    timestamp_to,
+                    limit=None,
+                    offset=None,
+                    matchtype=None
+                )
+                archived_tweets = response.get()
 
                 if archived_tweets:
-                    # 2. Define fields to parse
-                    field_options = [
-                        "archived_timestamp",
-                        "original_tweet_url",
-                        "archived_tweet_url",
-                    ]
-                    
-                    # 3. Parse tweets into structured format
-                    parser = TweetsParser(archived_tweets, username, field_options)
+                    parser = TweetsParser(archived_tweets, username, FIELD_OPTIONS)
                     parsed_tweets = parser.parse()
 
-                    # 4. Convert parsed tweets to a DataFrame
-                    df = pd.DataFrame(parsed_tweets)
+                    exporter = TweetsExporter(parsed_tweets, username, FIELD_OPTIONS)
+                    df = exporter.dataframe
+                    file_name = exporter.filename
 
-                    # 5. Rename columns
-                    df.rename(
-                        columns={
-                            "archived_timestamp": "timestamp",
-                            "original_tweet_url": "original_url",
-                            "archived_tweet_url": "archived_url",
-                            "archived_statuscode": "statuscode"
-                        },
-                        inplace=True
-                    )
+                    df["timestamp"] = pd.to_datetime(df["archived_timestamp"], errors="coerce")
 
-                    # 6. Convert timestamp column to datetime
-                    df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
-
-                    # 7. Filter by date range
+                    # Filter by date range again (safe-guard)
                     filtered_df = df[
                         (df["timestamp"] >= pd.Timestamp(start_date)) &
                         (df["timestamp"] <= pd.Timestamp(end_date))
                     ]
 
-                    # 8. Filter by status codes if selected
+                    # Filter by status codes if selected
                     if status_codes_filter:
                         filtered_df = filtered_df[
-                            filtered_df["statuscode"].isin(status_codes_filter)
+                            filtered_df["archived_statuscode"].isin(status_codes_filter)
                         ]
 
-                    # 9. Display results
-                    st.success(f"Found {len(filtered_df)} tweets in the specified range.")
                     if not filtered_df.empty:
+                        st.success(f"Found {len(filtered_df)} tweets in the specified range.")
                         st.write("Filtered Archived Tweets:")
                         st.dataframe(filtered_df)
 
-                        # Generate CSV in memory
+                        # CSV
                         csv_data = filtered_df.to_csv(index=False).encode("utf-8")
-
-                        # Streamlit Download Button
                         st.download_button(
                             label="Download Filtered Tweets as CSV",
                             data=csv_data,
                             file_name=f"{username}_archived_tweets.csv",
                             mime="text/csv"
+                        )
+
+                        # JSON
+                        json_data = filtered_df.to_json(orient="records", lines=False)
+                        b64_json = base64.b64encode(json_data.encode()).decode()
+                        href_json = f"data:file/json;base64,{b64_json}"
+                        st.markdown(
+                            f'<a href="{href_json}" download="{file_name}.json" title="Download {file_name}.json">{file_name}.json</a>',
+                            unsafe_allow_html=True,
+                        )
+
+                        # HTML
+                        html = HTMLTweetsVisualizer(username, json_data)
+                        html_content = html.generate()
+                        b64_html = base64.b64encode(html_content.encode()).decode()
+                        href_html = f"data:text/html;base64,{b64_html}"
+                        st.markdown(
+                            f'<a href="{href_html}" download="{file_name}.html" title="Download {file_name}.html">{file_name}.html</a>',
+                            unsafe_allow_html=True,
                         )
                     else:
                         st.warning("No tweets match the specified filters.")
@@ -97,7 +112,7 @@ def wayback_tweets_main():
 
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
-    
+
     # Footer with Copyright
     st.markdown("""
     ---
@@ -108,4 +123,3 @@ def wayback_tweets_main():
 # Run the app
 if __name__ == "__main__":
     wayback_tweets_main()
-
