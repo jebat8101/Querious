@@ -1,0 +1,132 @@
+2025-02-10 11:43:27,082 - INFO - Connecting to 149.154.167.51:443/TcpFull...
+2025-02-10 11:43:28,878 - INFO - Connection to 149.154.167.51:443/TcpFull complete!
+2025-02-10 11:43:29,749 - INFO - Phone migrated to 5
+2025-02-10 11:43:29,750 - INFO - Reconnecting to new data center 5
+2025-02-10 11:43:29,923 - INFO - Disconnecting from 149.154.167.51:443/TcpFull...
+2025-02-10 11:43:29,924 - INFO - Disconnection from 149.154.167.51:443/TcpFull complete!
+2025-02-10 11:43:29,925 - INFO - Connecting to 91.108.56.191:443/TcpFull...
+2025-02-10 11:43:31,096 - INFO - Connection to 91.108.56.191:443/TcpFull complete!
+2025-02-10 11:45:02,769 - INFO - Connecting to 91.108.56.191:443/TcpFull...
+2025-02-10 11:45:02,781 - INFO - Connection to 91.108.56.191:443/TcpFull complete!
+2025-02-10 11:45:47,277 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 11:45:47,370 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 11:45:47,422 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 11:48:10,468 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 11:49:33,862 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 11:50:40,283 - INFO - Got difference for account updates
+2025-02-10 11:50:40,294 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 11:50:40,324 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 11:53:46,478 - ERROR - Invalid username jiha fikri: Invalid username format: jiha fikri
+2025-02-10 11:54:37,220 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 11:54:37,355 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 11:54:37,388 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 11:56:51,276 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 11:56:51,306 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 12:26:24,834 - ERROR - Task was destroyed but it is pending!
+task: <Task cancelling name='Task-7' coro=<UpdateMethods._update_loop() running at /home/elk/tools/env/lib/python3.11/site-packages/telethon/client/updates.py:308> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[gather.<locals>._done_callback() at /usr/lib/python3.11/asyncio/tasks.py:754]>
+2025-02-10 12:27:30,216 - INFO - Connecting to 91.108.56.191:443/TcpFull...
+2025-02-10 12:27:30,232 - INFO - Connection to 91.108.56.191:443/TcpFull complete!
+2025-02-10 12:30:15,527 - INFO - Connecting to 91.108.56.191:443/TcpFull...
+2025-02-10 12:30:15,541 - INFO - Connection to 91.108.56.191:443/TcpFull complete!
+2025-02-10 12:30:20,554 - ERROR - Unhandled exception occurred
+Traceback (most recent call last):
+  File "/home/elk/tools/tele/telegram-checker/telegram-checker.py", line 281, in <module>
+    asyncio.run(main())
+  File "/usr/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/home/elk/tools/tele/telegram-checker/telegram-checker.py", line 211, in main
+    await checker.initialize()
+  File "/home/elk/tools/tele/telegram-checker/telegram-checker.py", line 101, in initialize
+    await self.client.connect()
+  File "/home/elk/tools/env/lib/python3.11/site-packages/telethon/client/telegrambaseclient.py", line 555, in connect
+    self.session.auth_key = self._sender.auth_key
+    ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/elk/tools/env/lib/python3.11/site-packages/telethon/sessions/sqlite.py", line 180, in auth_key
+    self._update_session_table()
+  File "/home/elk/tools/env/lib/python3.11/site-packages/telethon/sessions/sqlite.py", line 194, in _update_session_table
+    c.execute('delete from sessions')
+sqlite3.OperationalError: database is locked
+2025-02-10 20:55:09,456 - INFO - Connecting to 91.108.56.191:443/TcpFull...
+2025-02-10 20:55:09,475 - INFO - Connection to 91.108.56.191:443/TcpFull complete!
+2025-02-10 20:57:16,310 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 20:57:16,340 - INFO - File lives in another DC
+2025-02-10 20:57:16,374 - INFO - Connecting to 149.154.175.51:443/TcpFull...
+2025-02-10 20:57:18,871 - INFO - Connection to 149.154.175.51:443/TcpFull complete!
+2025-02-10 20:57:18,872 - INFO - Exporting auth for new borrowed sender in DcOption(id=1, ip_address='149.154.175.51', port=443, ipv6=False, media_only=False, tcpo_only=False, cdn=False, static=False, this_port_only=False, secret=None)
+2025-02-10 20:57:20,436 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 20:57:20,466 - INFO - File lives in another DC
+2025-02-10 20:57:21,021 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 20:57:21,052 - INFO - File lives in another DC
+2025-02-10 20:57:21,327 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 20:57:21,357 - INFO - File lives in another DC
+2025-02-10 20:57:21,644 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 20:57:21,684 - INFO - File lives in another DC
+2025-02-10 20:57:21,971 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 20:57:21,995 - INFO - File lives in another DC
+2025-02-10 20:57:22,282 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 20:57:22,307 - INFO - File lives in another DC
+2025-02-10 20:57:22,597 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 20:57:22,632 - INFO - File lives in another DC
+2025-02-10 20:57:22,924 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 20:57:22,947 - INFO - File lives in another DC
+2025-02-10 20:57:23,239 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 20:57:23,263 - INFO - File lives in another DC
+2025-02-10 20:57:23,558 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 20:57:23,579 - INFO - File lives in another DC
+2025-02-10 20:57:23,876 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 20:57:23,903 - INFO - File lives in another DC
+2025-02-10 20:58:26,011 - INFO - Connecting to 91.108.56.191:443/TcpFull...
+2025-02-10 20:58:26,032 - INFO - Connection to 91.108.56.191:443/TcpFull complete!
+2025-02-10 21:27:47,574 - ERROR - Task was destroyed but it is pending!
+task: <Task cancelling name='Task-7' coro=<UpdateMethods._update_loop() running at /home/elk/tools/env/lib/python3.11/site-packages/telethon/client/updates.py:308> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[gather.<locals>._done_callback() at /usr/lib/python3.11/asyncio/tasks.py:754]>
+2025-02-10 21:44:37,741 - INFO - Connecting to 91.108.56.191:443/TcpFull...
+2025-02-10 21:44:37,757 - INFO - Connection to 91.108.56.191:443/TcpFull complete!
+2025-02-10 21:45:36,378 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 21:45:36,484 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 21:45:36,540 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-10 22:30:10,738 - INFO - Connecting to 91.108.56.191:443/TcpFull...
+2025-02-10 22:30:10,759 - INFO - Connection to 91.108.56.191:443/TcpFull complete!
+2025-02-12 17:42:18,743 - INFO - Connecting to 91.108.56.191:443/TcpFull...
+2025-02-12 17:42:18,765 - INFO - Connection to 91.108.56.191:443/TcpFull complete!
+2025-02-12 17:44:09,276 - INFO - Connecting to 91.108.56.191:443/TcpFull...
+2025-02-12 17:44:09,298 - INFO - Connection to 91.108.56.191:443/TcpFull complete!
+2025-02-12 17:44:34,425 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-12 17:44:34,520 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-12 17:44:34,575 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-12 17:44:34,638 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-12 17:44:34,710 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-12 17:44:34,814 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-12 17:44:34,994 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-12 17:44:35,087 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-12 17:47:18,365 - INFO - Connecting to 91.108.56.191:443/TcpFull...
+2025-02-12 17:47:18,385 - INFO - Connection to 91.108.56.191:443/TcpFull complete!
+2025-02-17 10:52:46,140 - INFO - Connecting to 91.108.56.191:443/TcpFull...
+2025-02-17 10:52:46,155 - INFO - Connection to 91.108.56.191:443/TcpFull complete!
+2025-02-17 10:53:18,475 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-17 10:53:18,563 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-17 10:53:18,619 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-17 10:54:37,231 - INFO - Connecting to 91.108.56.191:443/TcpFull...
+2025-02-17 10:54:37,245 - INFO - Connection to 91.108.56.191:443/TcpFull complete!
+2025-02-17 10:55:05,511 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-17 10:55:05,634 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-17 10:55:05,672 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-17 10:55:13,827 - ERROR - Invalid username wanmud: No user has "wanmud" as username
+2025-02-17 10:55:20,723 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-17 10:55:20,854 - INFO - File lives in another DC
+2025-02-17 10:55:20,979 - INFO - Connecting to 149.154.175.51:443/TcpFull...
+2025-02-17 10:55:23,027 - INFO - Connection to 149.154.175.51:443/TcpFull complete!
+2025-02-17 10:55:23,027 - INFO - Exporting auth for new borrowed sender in DcOption(id=1, ip_address='149.154.175.51', port=443, ipv6=False, media_only=False, tcpo_only=False, cdn=False, static=False, this_port_only=False, secret=None)
+2025-02-17 10:55:24,541 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-17 10:55:24,565 - INFO - File lives in another DC
+2025-02-17 10:55:25,068 - INFO - Starting direct file download in chunks of 131072 at 0, stride 131072
+2025-02-17 10:55:25,092 - INFO - File lives in another DC
+2025-02-17 10:55:50,893 - ERROR - Invalid username najib razak: Invalid username format: najib razak
+2025-02-21 14:53:46,678 - INFO - Connecting to 91.108.56.191:443/TcpFull...
+2025-02-21 14:53:46,689 - INFO - Connection to 91.108.56.191:443/TcpFull complete!
