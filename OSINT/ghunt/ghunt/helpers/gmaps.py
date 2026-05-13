@@ -15,6 +15,13 @@ from ghunt.objects.utils import *
 from ghunt.helpers.knowledge import get_gmaps_type_translation
 
 
+def _list_get(data, index: int):
+    """Return data[index] if data is a long-enough list, else None."""
+    if not isinstance(data, list) or len(data) <= index:
+        return None
+    return data[index]
+
+
 def get_datetime(datepublished: str):
     """
         Get an approximative date from the maps review date
@@ -56,11 +63,19 @@ async def get_reviews(as_client: httpx.AsyncClient, gaia_id: str) -> Tuple[str, 
     if req.status_code == 302 and req.headers["Location"].startswith("https://www.google.com/sorry/index"):
         return "failed", stats, [], []
 
-    data = json.loads(req.text[5:])
-    if not data[16][8]:
+    try:
+        data = json.loads(req.text[5:])
+    except (json.JSONDecodeError, TypeError):
         return "empty", stats, [], []
-    stats = {sec[6]:sec[7] for sec in data[16][8][0]}
-    total_reviews = stats["Reviews"] + stats["Ratings"] + stats["Photos"]
+
+    sec_block = _list_get(data, 16)
+    if not sec_block or not _list_get(sec_block, 8):
+        return "empty", stats, [], []
+    inner = sec_block[8]
+    if not inner or not isinstance(inner[0], list):
+        return "empty", stats, [], []
+    stats = {sec[6]: sec[7] for sec in inner[0] if isinstance(sec, list) and len(sec) > 7}
+    total_reviews = stats.get("Reviews", 0) + stats.get("Ratings", 0) + stats.get("Photos", 0)
     if not total_reviews:
         return "empty", stats, [], []
 
@@ -73,7 +88,10 @@ async def get_reviews(as_client: httpx.AsyncClient, gaia_id: str) -> Tuple[str, 
                     first = False
                 else:
                     req = await as_client.get(f"https://www.google.com/locationhistory/preview/mas?authuser=0&hl=en&gl=us&pb={gb.config.templates['gmaps_pb'][category]['page'].format(gaia_id, next_page_token)}")
-                data = json.loads(req.text[5:])
+                try:
+                    data = json.loads(req.text[5:])
+                except (json.JSONDecodeError, TypeError):
+                    break
 
                 new_reviews = []
                 new_photos = []
@@ -81,73 +99,94 @@ async def get_reviews(as_client: httpx.AsyncClient, gaia_id: str) -> Tuple[str, 
 
                 # Reviews
                 if category == "reviews":
-                    if not data[24]:
+                    reviews_root = _list_get(data, 24)
+                    if reviews_root is None:
+                        # Short / reshaped payload (Google often changes indices).
+                        break
+                    if not reviews_root:
                         return "private", stats, [], []
-                    reviews_data = data[24][0]
-                    if not reviews_data:
+                    reviews_data = reviews_root[0] if isinstance(reviews_root, list) else None
+                    if not reviews_data or not isinstance(reviews_data, list):
                         break
                     for review_data in reviews_data:
-                        review = MapsReview()
-                        review.id = review_data[6][0]
-                        review.date = datetime.utcfromtimestamp(review_data[6][1][3] / 1000000)
-                        if len(review_data[6][2]) > 15 and review_data[6][2][15]:
-                            review.comment = review_data[6][2][15][0][0]
-                        review.rating = review_data[6][2][0][0]
+                        try:
+                            review = MapsReview()
+                            review.id = review_data[6][0]
+                            review.date = datetime.utcfromtimestamp(review_data[6][1][3] / 1000000)
+                            if len(review_data[6][2]) > 15 and review_data[6][2][15]:
+                                review.comment = review_data[6][2][15][0][0]
+                            review.rating = review_data[6][2][0][0]
 
-                        review.location.id = review_data[1][14][0]
-                        review.location.name = review_data[1][2]
-                        review.location.address = review_data[1][3]
-                        review.location.tags = review_data[1][4] if review_data[1][4] else []
-                        review.location.types = [x for x in review_data[1][8] if x]
-                        if review_data[1][0]:
-                            review.location.position.latitude = review_data[1][0][2]
-                            review.location.position.longitude = review_data[1][0][3]
-                        # if len(review_data[1]) > 31 and review_data[1][31]:
-                            # print(f"Cost level : {review_data[1][31]}")
-                            # review.location.cost_level = len(review_data[1][31])
-                        new_reviews.append(review)
-                        bar()
+                            review.location.id = review_data[1][14][0]
+                            review.location.name = review_data[1][2]
+                            review.location.address = review_data[1][3]
+                            review.location.tags = review_data[1][4] if review_data[1][4] else []
+                            review.location.types = [x for x in review_data[1][8] if x]
+                            if review_data[1][0]:
+                                review.location.position.latitude = review_data[1][0][2]
+                                review.location.position.longitude = review_data[1][0][3]
+                            new_reviews.append(review)
+                            bar()
+                        except (IndexError, TypeError, KeyError, ValueError, ZeroDivisionError):
+                            continue
 
                     agg_reviews += new_reviews
 
-                    if not new_reviews or len(data[24]) < 4 or not data[24][3]:
+                    if (
+                        not new_reviews
+                        or not isinstance(reviews_root, list)
+                        or len(reviews_root) < 4
+                        or not reviews_root[3]
+                    ):
                         break
-                    next_page_token = data[24][3].strip("=")
+                    next_page_token = str(reviews_root[3]).strip("=")
 
                 # Photos
                 elif category == "photos" :
-                    if not data[22]:
+                    photos_root = _list_get(data, 22)
+                    if photos_root is None:
+                        break
+                    if not photos_root:
                         return "private", stats, [], []
-                    photos_data = data[22][1]
-                    if not photos_data:
+                    photos_data = photos_root[1] if isinstance(photos_root, list) and len(photos_root) > 1 else None
+                    if not photos_data or not isinstance(photos_data, list):
                         break
                     for photo_data in photos_data:
-                        photos = MapsPhoto()
-                        photos.id = photo_data[0][10]
-                        photos.url = photo_data[0][6][0].split("=")[0]
-                        date = photo_data[0][21][6][8]
-                        photos.date = datetime(date[0], date[1], date[2], date[3]) # UTC
-                        # photos.approximative_date = get_datetime(date[8][0]) # UTC
+                        try:
+                            photos = MapsPhoto()
+                            photos.id = photo_data[0][10]
+                            photos.url = photo_data[0][6][0].split("=")[0]
+                            date = photo_data[0][21][6][8]
+                            photos.date = datetime(date[0], date[1], date[2], date[3])  # UTC
 
-                        if len(photo_data) > 1:
-                            photos.location.id = photo_data[1][14][0]
-                            photos.location.name = photo_data[1][2]
-                            photos.location.address = photo_data[1][3]
-                            photos.location.tags = photo_data[1][4] if photo_data[1][4] else []
-                            photos.location.types = [x for x in photo_data[1][8] if x] if photo_data[1][8] else []
-                            if photo_data[1][0]:
-                                photos.location.position.latitude = photo_data[1][0][2]
-                                photos.location.position.longitude = photo_data[1][0][3]
-                            if len(photo_data[1]) > 31 and photo_data[1][31]:
-                                photos.location.cost_level = len(photo_data[1][31])
-                        new_photos.append(photos)
-                        bar()
+                            if len(photo_data) > 1:
+                                photos.location.id = photo_data[1][14][0]
+                                photos.location.name = photo_data[1][2]
+                                photos.location.address = photo_data[1][3]
+                                photos.location.tags = photo_data[1][4] if photo_data[1][4] else []
+                                photos.location.types = (
+                                    [x for x in photo_data[1][8] if x] if photo_data[1][8] else []
+                                )
+                                if photo_data[1][0]:
+                                    photos.location.position.latitude = photo_data[1][0][2]
+                                    photos.location.position.longitude = photo_data[1][0][3]
+                                if len(photo_data[1]) > 31 and photo_data[1][31]:
+                                    photos.location.cost_level = len(photo_data[1][31])
+                            new_photos.append(photos)
+                            bar()
+                        except (IndexError, TypeError, KeyError, ValueError, ZeroDivisionError):
+                            continue
 
                     agg_photos += new_photos
 
-                    if not new_photos or len(data[22]) < 4 or not data[22][3]:
+                    if (
+                        not new_photos
+                        or not isinstance(photos_root, list)
+                        or len(photos_root) < 4
+                        or not photos_root[3]
+                    ):
                         break
-                    next_page_token = data[22][3].strip("=")
+                    next_page_token = str(photos_root[3]).strip("=")
 
     return "", stats, agg_reviews, agg_photos
 
@@ -323,8 +362,55 @@ def output(err: str, stats: Dict[str, int], reviews: List[MapsReview], photos: L
         return
 
     print("\n[Reviews]")
-    avg_ratings = round(sum([x.rating for x in reviews]) / len(reviews), 1)
-    print(f"[+] Average rating : {ppnb(avg_ratings)}/5\n")
+    if reviews:
+        avg_ratings = round(sum([x.rating for x in reviews]) / len(reviews), 1)
+        print(f"[+] Average rating : {ppnb(avg_ratings)}/5\n")
+
+        list_reviews = sorted(
+            reviews,
+            key=lambda r: r.date.timestamp() if r.date else 0.0,
+            reverse=True,
+        )[:30]
+        print(f"[+] Listing up to {len(list_reviews)} recent reviews (newest first)\n")
+        for i, rev in enumerate(list_reviews, 1):
+            place = rev.location.name or "?"
+            addr = rev.location.address or ""
+            lat = rev.location.position.latitude
+            lng = rev.location.position.longitude
+            coords = f"{lat}, {lng}" if lat and lng else "no coords"
+            when = rev.date.strftime("%Y-%m-%d %H:%M UTC") if rev.date else "?"
+            comment = (rev.comment or "").replace("\n", " ").strip()
+            if len(comment) > 220:
+                comment = comment[:217] + "..."
+            line = f"  {i}. ★{rev.rating} — {place}"
+            if addr:
+                line += f" — {addr}"
+            line += f"\n     {when} | {coords}"
+            if comment:
+                line += f"\n     “{comment}”"
+            print(line)
+        print()
+    else:
+        print("[-] No review entries with text (photos or ratings-only may still exist).\n")
+
+    if photos:
+        list_photos = sorted(
+            photos,
+            key=lambda p: p.date.timestamp() if p.date else 0.0,
+            reverse=True,
+        )[:20]
+        print(f"[Maps photos] Showing up to {len(list_photos)} recent photos\n")
+        for i, ph in enumerate(list_photos, 1):
+            when = ph.date.strftime("%Y-%m-%d %H:%M UTC") if ph.date else "?"
+            loc = ph.location.name or "?"
+            addr = ph.location.address or ""
+            lat = ph.location.position.latitude
+            lng = ph.location.position.longitude
+            coords = f"{lat}, {lng}" if lat and lng else "no coords"
+            url = ph.url or ""
+            extra = f" — {addr}" if addr else ""
+            print(f"  {i}. {when} | {loc}{extra}\n     {coords}\n     {url}")
+        print()
 
     # I removed the costs calculation because of a Google update : https://github.com/mxrch/GHunt/issues/529
 
@@ -391,7 +477,7 @@ def output(err: str, stats: Dict[str, int], reviews: List[MapsReview], photos: L
             gb.rc.print(f"\n🏨 [underline]{translation if translation else type.title()} [{type_count}]", style="bold")
             nb = 0
             for tag, tag_count in list(tags_counts.items()):
-                if nb >= 7:
+                if nb >= 15:
                     break
                 elif tag.lower() == type:
                     continue

@@ -48,17 +48,56 @@ async def search_player(ghunt_creds: GHuntCreds, as_client: httpx.AsyncClient, q
     player_search_results = await playgateway_pa.search_player(as_client, query)
     return player_search_results.results
 
+def _fmt_ts(ts):
+    if not ts:
+        return "?"
+    return str(ts)
+
+
+def _sort_ts(value):
+    if hasattr(value, "timestamp"):
+        return value.timestamp()
+    return 0.0
+
+
 def output(player: Player):
     if not player.profile.profile_settings.profile_visible:
         print("\n[-] Profile is private.")
         return
 
     print("\n[+] Profile is public !")
+    prof = player.profile
+    if prof.display_name:
+        print(f"Display name : {prof.display_name}")
+    if prof.gamertag:
+        print(f"Gamertag : {prof.gamertag}")
+    if prof.title:
+        print(f"Title : {prof.title}")
+    exp = prof.experience_info
+    if exp.current_level and exp.current_level.level:
+        print(
+            f"Level / XP : {exp.current_level.level} "
+            f"({exp.current_xp or '?'} XP, "
+            f"{exp.total_unlocked_achievements} achievements unlocked in profile)"
+        )
+
     print(f"\n[+] Played to {len(player.played_games)} games")
     print(f"[+] Got {len(player.achievements)} achievements")
 
     if player.played_games:
         print(f"\n[+] Last played game : {player.profile.last_played_app.app_name} ({player.profile.last_played_app.timestamp_millis} UTC)")
+
+        sorted_games = sorted(
+            player.played_games,
+            key=lambda g: _sort_ts(g.last_played_time_millis),
+            reverse=True,
+        )
+        show_n = min(25, len(sorted_games))
+        print(f"\n[Recent played games] (showing {show_n} of {len(sorted_games)})")
+        for g in sorted_games[:show_n]:
+            when = g.formatted_last_played_time or _fmt_ts(g.last_played_time_millis)
+            ach = g.unlocked_achievement_count
+            print(f"  - {g.game_data.name} | last: {when} | achievements: {ach}")
 
         if player.achievements:
             app_ids_count = {}
@@ -74,4 +113,17 @@ def output(player: Player):
                     target_game = game
                     break
 
-            print(f"[+] Game with the most achievements : {target_game.game_data.name} ({achiv_nb})")
+            if target_game:
+                print(f"\n[+] Game with the most achievements : {target_game.game_data.name} ({achiv_nb})")
+
+        recent_ach = sorted(
+            player.achievements,
+            key=lambda a: _sort_ts(a.last_updated_timestamp),
+            reverse=True,
+        )[:15]
+        if recent_ach:
+            print(f"\n[Recent achievements] (up to 15)")
+            for a in recent_ach:
+                name = a.definition.name if a.definition and a.definition.name else a.id
+                st = a.achievement_state or "?"
+                print(f"  - {name} [{st}] — {a.last_updated_timestamp}")

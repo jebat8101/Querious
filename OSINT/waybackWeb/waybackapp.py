@@ -37,8 +37,9 @@ def wayback_tweets_main():
             try:
                 collapse = None
                 matchtype = None
-                timestamp_from = datetime.combine(start_date, datetime.min.time())
-                timestamp_to = datetime.combine(end_date, datetime.max.time())
+                # WaybackTweets expects timestamps as strings like YYYYMMDDhhmmss.
+                timestamp_from = datetime.combine(start_date, datetime.min.time()).strftime("%Y%m%d%H%M%S")
+                timestamp_to = datetime.combine(end_date, datetime.max.time()).strftime("%Y%m%d%H%M%S")
 
                 response = WaybackTweets(
                     username,
@@ -46,7 +47,7 @@ def wayback_tweets_main():
                     timestamp_from,
                     timestamp_to,
                     limit=None,
-                    offset=None,
+                    resumption_key=None,
                     matchtype=None
                 )
                 archived_tweets = response.get()

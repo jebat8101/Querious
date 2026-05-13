@@ -43,8 +43,20 @@ async def hunt(as_client: httpx.AsyncClient, gaia_id: str, json_file: Path=None)
     
     gb.rc.print("🙋 Google Account data\n", style="plum2")
 
-    # if container in target.names:
-        # print(f"Name : {target.names[container].fullname}\n")
+    if container in target.names and (
+        getattr(target.names[container], "fullname", None)
+        or getattr(target.names[container], "firstName", None)
+    ):
+        n = target.names[container]
+        parts = [p for p in (n.fullname, n.firstName, n.lastName) if p]
+        if parts:
+            print(f"Name : {' '.join(parts)}\n")
+
+    gaia = target.personId
+    gb.rc.print("[Links]", style="bold")
+    print(f"Maps contributor : https://www.google.com/maps/contrib/{gaia}/reviews")
+    print(f"Photos (if public) : https://www.google.com/maps/contrib/{gaia}/photos")
+    print()
 
     if container in target.profilePhotos:
         if target.profilePhotos[container].isDefault:
@@ -66,7 +78,11 @@ async def hunt(as_client: httpx.AsyncClient, gaia_id: str, json_file: Path=None)
             # await ia.detect_face(vision_api, as_client, target.coverPhotos[container].url)
             print()
 
-    print(f"Last profile edit : {target.sourceIds[container].lastUpdated.strftime('%Y/%m/%d %H:%M:%S (UTC)')}\n")
+    _lu = target.sourceIds[container].lastUpdated
+    if _lu:
+        print(f"Last profile edit : {_lu.strftime('%Y/%m/%d %H:%M:%S (UTC)')}\n")
+    else:
+        print("Last profile edit : (not provided by API)\n")
 
     print(f"Gaia ID : {target.personId}\n")
 
@@ -78,15 +94,20 @@ async def hunt(as_client: httpx.AsyncClient, gaia_id: str, json_file: Path=None)
 
     gb.rc.print(f"\n📞 Google Chat Extended Data\n", style="light_salmon3")
 
-    #print(f"Presence : {target.extendedData.dynamiteData.presence}")
-    print(f"Entity Type : {target.extendedData.dynamiteData.entityType}")
-    #print(f"DND State : {target.extendedData.dynamiteData.dndState}")
-    gb.rc.print(f"Customer ID : {x if (x := target.extendedData.dynamiteData.customerId) else '[italic]Not found.[/italic]'}")
+    dd = target.extendedData.dynamiteData
+    if dd.presence:
+        print(f"Presence : {dd.presence}")
+    print(f"Entity Type : {dd.entityType}")
+    if dd.dndState:
+        print(f"DND State : {dd.dndState}")
+    gb.rc.print(f"Customer ID : {x if (x := dd.customerId) else '[italic]Not found.[/italic]'}")
 
     gb.rc.print(f"\n🌐 Google Plus Extended Data\n", style="cyan")
 
     print(f"Entreprise User : {target.extendedData.gplusData.isEntrepriseUser}")
-    #print(f"Content Restriction : {target.extendedData.gplusData.contentRestriction}")
+    cr = target.extendedData.gplusData.contentRestriction
+    if cr:
+        print(f"Content Restriction : {cr}")
     
     if container in target.inAppReachability:
         print("\n[+] Activated Google services :")

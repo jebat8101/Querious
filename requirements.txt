@@ -1,2 +1,10 @@
 streamlit
 streamlit_option_menu
+python-dotenv
+opencv-python-headless
+google-cloud-vision
+streamlit-folium
+googlesearch-python
+phonenumbers
+waybacktweets
+telethon

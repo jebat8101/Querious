@@ -14,11 +14,20 @@ def run_ghunt_command(command):
         result = subprocess.run(
             [sys.executable, GHUNT_PATH] + command.split(),
             text=True,
-            capture_output=True
+            capture_output=True,
+            cwd=os.path.dirname(GHUNT_PATH),
         )
-        output = result.stdout.strip()
-        error = result.stderr.strip()
-        return output if output else error  # Return meaningful output
+        parts = []
+        if result.stdout.strip():
+            parts.append(result.stdout.rstrip())
+        if result.stderr.strip():
+            parts.append("--- stderr ---\n" + result.stderr.rstrip())
+        if not parts:
+            return f"(no output, exit code {result.returncode})"
+        body = "\n\n".join(parts)
+        if result.returncode != 0:
+            body += f"\n\n(exit code {result.returncode})"
+        return body
     except Exception as e:
         return str(e)
 
@@ -47,7 +56,7 @@ def ghunt_app():
             if email:
                 st.info(f"Running GHunt on: {email}")
                 output = run_ghunt_command(f"email {email}")
-                st.text_area("Output:", output, height=300)
+                st.text_area("Output:", output, height=520)
             else:
                 st.warning("Please provide a valid email address.")
 
@@ -58,7 +67,7 @@ def ghunt_app():
             if gaia_id:
                 st.info("Running GHunt on the provided Gaia ID...")
                 output = run_ghunt_command(f"gaia {gaia_id}")
-                st.text_area("Output:", output, height=300)
+                st.text_area("Output:", output, height=520)
             else:
                 st.warning("Please provide a valid Gaia ID.")
 
@@ -69,7 +78,7 @@ def ghunt_app():
             if drive_url:
                 st.info("Running GHunt on the provided Drive URL...")
                 output = run_ghunt_command(f"drive {drive_url}")
-                st.text_area("Output:", output, height=300)
+                st.text_area("Output:", output, height=520)
             else:
                 st.warning("Please provide a valid Drive URL.")
 
@@ -80,7 +89,7 @@ def ghunt_app():
             if bssid:
                 st.info("Geolocating the provided BSSID...")
                 output = run_ghunt_command(f"geolocate {bssid}")
-                st.text_area("Output:", output, height=300)
+                st.text_area("Output:", output, height=520)
             else:
                 st.warning("Please provide a valid BSSID.")
 

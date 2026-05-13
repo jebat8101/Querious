@@ -8,8 +8,8 @@ from telethon.sync import TelegramClient
 from telethon.errors.rpcerrorlist import PhoneNumberBannedError, UsernameInvalidError
 from telethon import functions, types
 
-# Define the base directory for storage inside `/home/elk/tools/tele/`
-BASE_DIR = "/home/elk/tools/tele"
+# Anchor storage to this module's directory so the app works regardless of who runs it.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RESULTS_DIR = os.path.join(BASE_DIR, "results")
 SESSION_FILE = os.path.join(BASE_DIR, "session_name.session")
 
@@ -23,8 +23,8 @@ def telegram_scraper_main():
     st.title("Telegram Phone Checker")
 
     # Load API credentials from environment variables
-    api_id = os.getenv("APP_API_ID", "1807430")
-    api_hash = os.getenv("APP_API_HASH", "ee09343af2a246aeb9c130c9e74a0179")
+    api_id = os.getenv("APP_API_ID", "2768259")
+    api_hash = os.getenv("APP_API_HASH", "cfbe915f2a118b785685521f2d898fd6")
 
     # Ensure the results directory exists before saving files
     os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -87,7 +87,7 @@ def telegram_scraper_main():
         if st.button("Check Telegram Account"):
             result = asyncio.run(check_phone(phone))
             st.json(result)
-            file_path = os.path.join(RESULTS_DIR, f"{phone.replace('+', '')}.json")  # Save in `/home/elk/tools/tele/results/`
+            file_path = os.path.join(RESULTS_DIR, f"{phone.replace('+', '')}.json")
             with open(file_path, "w") as f:
                 json.dump(result, f, indent=4, default=json_serializer)
             st.success(f"Result saved successfully at {file_path}!")

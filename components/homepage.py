@@ -77,4 +77,5 @@ def homepage():
     tool_mapping.get(selected_tool, lambda: st.write("ℹ️ Please select a category and a tool from the dropdowns."))()
 
 # Call homepage function
-homepage()
+if __name__ == "__main__":
+    homepage()

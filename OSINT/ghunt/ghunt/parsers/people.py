@@ -60,7 +60,12 @@ class PersonPhoto(Parser):
             self.isDefault, self.flathash = await is_default_profile_pic(as_client, self.url)
             
         elif photo_type == "cover_photo":
-            self.url = '='.join(photo_data.get("imageUrl").split("=")[:-1])
+            raw_url = photo_data.get("imageUrl")
+            if not raw_url:
+                self.url = ""
+                self.isDefault = True
+                return
+            self.url = '='.join(raw_url.split("=")[:-1])
             if (isDefault := photo_data.get("isDefault")):
                 self.isDefault = isDefault
         else:
@@ -107,7 +112,8 @@ class PersonInAppReachability(Parser):
 
     def _scrape(self, apps_data, container_name: str):
         for app in apps_data:
-            if app["metadata"]["container"] == container_name:
+            c = (app.get("metadata") or {}).get("container")
+            if c == container_name and app.get("appType"):
                 self.apps.append(app["appType"].title())
 
 class PersonContainers(dict):
@@ -129,44 +135,68 @@ class Person(Parser):
         self.personId = person_data.get("personId")
         if person_data.get("email"):
             for email_data in person_data["email"]:
+                c = (email_data.get("metadata") or {}).get("container")
+                if not c:
+                    continue
                 person_email = PersonEmail()
                 person_email._scrape(email_data)
-                self.emails[email_data["metadata"]["container"]] = person_email
+                self.emails[c] = person_email
 
         if person_data.get("name"):
             for name_data in person_data["name"]:
+                c = (name_data.get("metadata") or {}).get("container")
+                if not c:
+                    continue
                 person_name = PersonName()
                 person_name._scrape(name_data)
-                self.names[name_data["metadata"]["container"]] = person_name
+                self.names[c] = person_name
 
         if person_data.get("readOnlyProfileInfo"):
             for profile_data in person_data["readOnlyProfileInfo"]:
+                c = (profile_data.get("metadata") or {}).get("container")
+                if not c:
+                    continue
                 person_profile = PersonProfileInfo()
                 person_profile._scrape(profile_data)
-                self.profileInfos[profile_data["metadata"]["container"]] = person_profile
+                self.profileInfos[c] = person_profile
 
                 if person_data.get("photo"):
                     for photo_data in person_data["photo"]:
                         person_photo = PersonPhoto()
                         await person_photo._scrape(as_client, photo_data, "profile_photo")
-                        self.profilePhotos[profile_data["metadata"]["container"]] = person_photo
+                        pc = (photo_data.get("metadata") or {}).get("container") or c
+                        self.profilePhotos[pc] = person_photo
 
         if (source_ids := person_data.get("metadata", {}).get("identityInfo", {}).get("sourceIds")):
             for source_ids_data in source_ids:
+                sc = source_ids_data.get("container")
+                if not sc:
+                    continue
                 person_source_ids = PersonSourceIds()
                 person_source_ids._scrape(source_ids_data)
-                self.sourceIds[source_ids_data["container"]] = person_source_ids
+                self.sourceIds[sc] = person_source_ids
 
         if person_data.get("coverPhoto"):
             for cover_photo_data in person_data["coverPhoto"]:
+                meta = cover_photo_data.get("metadata") or {}
+                container_key = meta.get("container")
+                if not container_key:
+                    # API sometimes omits container on cover photos; align with profile hunt.
+                    container_key = (
+                        "PROFILE"
+                        if "PROFILE" in self.sourceIds
+                        else (next(iter(self.sourceIds), None) or "PROFILE")
+                    )
                 person_cover_photo = PersonPhoto()
                 await person_cover_photo._scrape(as_client, cover_photo_data, "cover_photo")
-                self.coverPhotos[cover_photo_data["metadata"]["container"]] = person_cover_photo
+                self.coverPhotos[container_key] = person_cover_photo
 
         if (apps_data := person_data.get("inAppReachability")):
             containers_names = set()
             for app_data in person_data["inAppReachability"]:
-                containers_names.add(app_data["metadata"]["container"])
+                ac = (app_data.get("metadata") or {}).get("container")
+                if ac:
+                    containers_names.add(ac)
 
             for container_name in containers_names:
                 person_app_reachability = PersonInAppReachability()

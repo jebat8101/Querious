@@ -1,7 +1,7 @@
 {
     "_": "User",
-    "id": 33216997,
-    "is_self": true,
+    "id": 1314211201,
+    "is_self": false,
     "contact": true,
     "mutual_contact": true,
     "deleted": false,
@@ -14,7 +14,7 @@
     "bot_inline_geo": false,
     "support": false,
     "scam": false,
-    "apply_min_photo": false,
+    "apply_min_photo": true,
     "fake": false,
     "bot_attach_menu": false,
     "premium": false,
@@ -29,22 +29,22 @@
     "bot_forum_view": false,
     "bot_forum_can_manage_topics": false,
     "bot_can_manage_bots": false,
-    "access_hash": 5351041475933006822,
-    "first_name": "1one",
-    "last_name": null,
-    "username": "myusufanaqiwan",
-    "phone": "60132471124",
+    "access_hash": -483782891662179829,
+    "first_name": "Temp",
+    "last_name": "User",
+    "username": "indianman81",
+    "phone": "60162867196",
     "photo": {
         "_": "UserProfilePhoto",
-        "photo_id": 142665916242571351,
+        "photo_id": 6102676515461379294,
         "dc_id": 5,
         "has_video": false,
         "personal": false,
-        "stripped_thumb": "\u0001\b\b\u001d7\u0010I?:(\u000b"
+        "stripped_thumb": "\u0001\b\bo?tQEia"
     },
     "status": {
-        "_": "UserStatusOnline",
-        "expires": "2026-05-11T03:46:32+00:00"
+        "_": "UserStatusLastMonth",
+        "by_me": true
     },
     "bot_info_version": null,
     "restriction_reason": [],
