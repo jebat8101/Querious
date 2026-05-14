@@ -1,0 +1,11 @@
+# Virtual environments (do not commit — was ~3 GiB of CUDA/torch binaries)
+env/
+venv/
+.venv/
+**/env/
+**/venv/
+**/.venv/
+
+__pycache__/
+*.py[cod]
+*$py.class
