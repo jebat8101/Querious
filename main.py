@@ -9,9 +9,11 @@ def load_homepage():
     from components.homepage import homepage  # Import only when needed
     return homepage
 
-# Initialize session state for authentication
+# Initialize session state for authentication and welcome gate
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
+if "welcome_acknowledged" not in st.session_state:
+    st.session_state.welcome_acknowledged = False
 
 # Redirect to the homepage or login screen
 if st.session_state.authenticated:
