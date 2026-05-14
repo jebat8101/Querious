@@ -54,12 +54,6 @@ def homepage():
     if selected_tool != st.session_state.selected_tool:
         st.session_state.selected_tool = selected_tool
 
-    # Logout button
-    if st.sidebar.button("🚪 Logout"):
-        st.session_state.authenticated = False
-        st.success("✅ Logged out successfully!")
-        st.rerun()
-
     # Render the selected OSINT tool
     tool_mapping = {
         "Phone Validation Application": socialpulse_main,
