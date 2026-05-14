@@ -1,1 +1,3 @@
-# streamlit-multiapp
+# Querious
+
+Streamlit multi-app OSINT toolkit.
