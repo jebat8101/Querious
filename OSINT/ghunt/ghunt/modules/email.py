@@ -154,19 +154,25 @@ async def hunt(as_client: httpx.AsyncClient, email_address: str, json_file: Path
 
     if cal_found:
         print("[+] Public Google Calendar found !\n")
-        if calendar_events.items:
-            cal_name = ""
-            if container in target.names:
-                cal_name = target.names[container].fullname or ""
+        cal_name = ""
+        if container in target.names:
+            cal_name = target.names[container].fullname or ""
+        if calendar_events and calendar_events.items:
             gcalendar.out(calendar, calendar_events, email_address, cal_name, limit=25)
         else:
-            print("=> No recent events found.")
+            links = gcalendar.public_calendar_links(email_address)
+            print("=> Calendar is public but no events were returned.")
+            print(f"=> iCal  : {links['ical']}")
+            print(f"=> Embed : {links['embed']}")
     else:
+        links = gcalendar.public_calendar_links(email_address)
         print("[-] No public Google Calendar.")
         print(
-            "[~] This is normal unless the user published their calendar at "
-            "https://calendar.google.com/calendar/u/0/r/settings/share"
+            "[~] The target must enable **Make available to public** under "
+            "Calendar → Settings → [calendar] → Access permissions for event details."
         )
+        print(f"[~] Share settings : {links['share_settings']}")
+        print(f"[~] If public, verify : {links['html']}")
 
     if json_file:
         if container == "PROFILE":
