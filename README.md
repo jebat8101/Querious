@@ -6,6 +6,19 @@
 
 Repository: [https://github.com/jebat8101/Querious](https://github.com/jebat8101/Querious.git)
 
+## Table of contents
+
+- [Overview](#overview)
+- [Project structure](#project-structure)
+- [Tools in the dashboard](#tools-in-the-dashboard)
+- [Requirements](#requirements)
+- [Installation (step by step)](#installation-step-by-step)
+- [Manual installation](#manual-installation-without-setupsh)
+- [Post-install configuration](#post-install-configuration)
+- [GitHub Codespaces](#github-codespaces--dev-container)
+- [Troubleshooting](#troubleshooting)
+- [Quick start](#quick-start-flow)
+
 ---
 
 ## Overview
@@ -61,6 +74,26 @@ Querious/
 | **Username** | Username Search App | Additional username OSINT |
 | **Lookup** | Hawker OSINT | Email checks on multiple services (GitHub, etc.) |
 | **Geolocation** | GVision | Reverse image search (landmarks, web entities) |
+
+### How to use each tool
+
+1. Run `streamlit run main.py` and click **Enter** on the welcome screen.
+2. In the sidebar, choose a **category** (Phone, Social Media, Email, etc.).
+3. Select the **tool** under that category.
+4. Enter your target in the main panel (email, username, phone number, or image) and run the scan.
+
+| Tool | Input | Typical output |
+|------|-------|----------------|
+| SocialPulse | Phone number | Carrier, validity, region |
+| Telegram Phone Checker | Phone number | Whether the number is registered on Telegram |
+| Kizuna Finder | Name / keywords | Social profile links |
+| Wayback Tweets | Twitter handle or URL | Archived tweet snapshots |
+| Holehe | Email address | Sites where the email is registered |
+| GHunt | Email or Gaia ID | Google profile, Maps activity, public calendar |
+| Sherlock | Username | URLs where the username exists |
+| Username Search App | Username | Cross-platform username matches |
+| Hawker OSINT | Email address | GitHub and other service leaks / presence |
+| GVision | Image file | Landmarks, labels, similar web pages |
 
 ---
 
