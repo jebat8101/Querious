@@ -4,22 +4,16 @@ imagehash==4.3.1
 # 10.0.0 has no Python 3.13 wheels and fails to build from source (KeyError '__version__' in setup).
 pillow>=11.0.0,<13
 python-dateutil==2.8.2
-rich==12.6.0
+# rich 13.x: required by waybacktweets; compatible with GHunt 2.x (see pyproject.toml)
+rich>=13.6.0,<14.0.0
 beautifultable==1.1.0
 beautifulsoup4==4.11.1
 alive-progress==2.4.1
-protobuf==4.21.9
+protobuf>=4.21.9,<6
 autoslot==2021.10.1
 humanize==4.4.0
 inflection==0.5.1
 jsonpickle==2.2.0
-packaging==23.0
+packaging>=23.0
 rich_argparse==1.5.0
-imagehash==4.3.1
-autoslot==2021.10.1
-rich_argparse==1.5.0
-geopy==2.3.0
-alive-progress==2.4.1
-beautifulsoup4==4.11.1
-beautifultable==1.1.0
 h2

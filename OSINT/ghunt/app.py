@@ -3,19 +3,27 @@ import subprocess
 import sys
 import os
 
-# Set GHunt path (adjusted to correct directory)
-GHUNT_PATH = os.path.join(os.getcwd(), "OSINT", "ghunt", "main.py")
+# Project root (Querious/) — reliable even if Streamlit cwd differs
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+GHUNT_PATH = os.path.join(_PROJECT_ROOT, "OSINT", "ghunt", "main.py")
 
 # ----------------- UTILITY FUNCTIONS -----------------
 
 def run_ghunt_command(command):
     """Run a GHunt command safely and capture the output."""
     try:
+        ghunt_root = os.path.dirname(GHUNT_PATH)
+        env = os.environ.copy()
+        # Ensure bundled ghunt package is importable when not installed editable
+        env["PYTHONPATH"] = os.pathsep.join(
+            filter(None, [ghunt_root, env.get("PYTHONPATH", "")])
+        )
         result = subprocess.run(
             [sys.executable, GHUNT_PATH] + command.split(),
             text=True,
             capture_output=True,
-            cwd=os.path.dirname(GHUNT_PATH),
+            cwd=ghunt_root,
+            env=env,
         )
         parts = []
         if result.stdout.strip():

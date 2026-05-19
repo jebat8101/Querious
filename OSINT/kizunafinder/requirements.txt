@@ -1,3 +1,4 @@
 streamlit
 requests
 colorama
+streamlit_option_menu

@@ -1,6 +1,15 @@
+# =============================================================================
+# Querious — SATU fail untuk semua kebergantungan (satu kali: pip install -r requirements.txt)
+# =============================================================================
+
+# --- Aplikasi utama (Streamlit dashboard) ---
 streamlit
 streamlit_option_menu
 python-dotenv
+requests
+pandas
+
+# --- Modul OSINT (shared) ---
 opencv-python-headless
 google-cloud-vision
 streamlit-folium
@@ -8,3 +17,28 @@ googlesearch-python
 phonenumbers
 waybacktweets
 telethon
+holehe
+
+# --- GHunt ---
+-r OSINT/ghunt/requirements.txt
+
+# --- GVision (reverse image) ---
+-r OSINT/gvision/requirements.txt
+
+# --- Hawkerweb ---
+-r OSINT/Hawkerweb/requirements.txt
+
+# --- Kizunafinder (social search; termasuk torch) ---
+-r OSINT/kizunafinder/requirements.txt
+
+# --- WaybackWeb ---
+-r OSINT/waybackWeb/requirements.txt
+
+# --- Telegram checker ---
+-r OSINT/tele/telegram-checker/requirements.txt
+
+# --- SocialPulse / Holehe / Username (tiada requirements.txt berasingan) ---
+# rich: jangan pin di sini — GHunt + waybacktweets + telegram-checker selesaikan versi
+beautifulsoup4
+click
+colorama

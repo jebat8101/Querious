@@ -1,6 +1,4 @@
 telethon
-rich
-asyncio
+rich>=13.6.0,<14.0.0
 click
-pathlib
 python-dotenv

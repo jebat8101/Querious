@@ -1,8 +1,6 @@
-google-cloud
 google-cloud-vision
-streamlit
 streamlit-folium
 folium
 Pillow
 xyzservices
-opencv-python
+opencv-python-headless

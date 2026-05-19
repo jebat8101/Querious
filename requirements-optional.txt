@@ -1,0 +1,8 @@
+# Pilihan — ML berat (torch + CUDA ~2GB+). Jangan masukkan ke install biasa.
+# Pasang hanya jika anda perlukan: pip install -r requirements-optional.txt
+torch
+transformers
+tweepy
+snscrape
+matplotlib
+plotly

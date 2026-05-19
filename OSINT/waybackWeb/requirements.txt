@@ -1,11 +1,5 @@
+# Wayback Tweets app — hanya deps yang digunakan oleh app.py (TIADA torch/CUDA)
 streamlit
-tweepy
-snscrape
 pandas
+waybacktweets
 python-dotenv
-matplotlib
-plotly
-requests
-beautifulsoup4
-torch
-transformers
