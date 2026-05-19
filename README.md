@@ -130,7 +130,7 @@ This creates `.venv`, installs dependencies, and installs **GHunt** and **Sherlo
 
 ```bash
 chmod +x setup.sh
-./setup.sh
+bash setup.sh
 ```
 
 What `setup.sh` does:
