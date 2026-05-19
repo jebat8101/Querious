@@ -116,7 +116,9 @@ async def hunt(as_client: httpx.AsyncClient, gaia_id: str, json_file: Path=None)
 
     gb.rc.print("\n🗺️ Maps data", style="green4")
 
-    err, stats, reviews, photos = await gmaps.get_reviews(as_client, target.personId)
+    err, stats, reviews, photos = await gmaps.get_reviews(
+        as_client, target.personId, cookies=ghunt_creds.cookies
+    )
     gmaps.output(err, stats, reviews, photos, target.personId)
 
     if json_file:

@@ -143,7 +143,9 @@ async def hunt(as_client: httpx.AsyncClient, email_address: str, json_file: Path
 
     gb.rc.print("\n🗺️ Maps data", style="green4")
 
-    err, stats, reviews, photos = await gmaps.get_reviews(as_client, target.personId)
+    err, stats, reviews, photos = await gmaps.get_reviews(
+        as_client, target.personId, cookies=ghunt_creds.cookies
+    )
     gmaps.output(err, stats, reviews, photos, target.personId)
 
     gb.rc.print("\n🗓️ Calendar data\n", style="slate_blue3")
@@ -161,6 +163,10 @@ async def hunt(as_client: httpx.AsyncClient, email_address: str, json_file: Path
             print("=> No recent events found.")
     else:
         print("[-] No public Google Calendar.")
+        print(
+            "[~] This is normal unless the user published their calendar at "
+            "https://calendar.google.com/calendar/u/0/r/settings/share"
+        )
 
     if json_file:
         if container == "PROFILE":

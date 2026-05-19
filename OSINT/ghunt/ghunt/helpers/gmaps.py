@@ -22,6 +22,81 @@ def _list_get(data, index: int):
     return data[index]
 
 
+def _stats_total(stats: Dict[str, int]) -> int:
+    return int(stats.get("Reviews", 0) or 0) + int(stats.get("Ratings", 0) or 0) + int(stats.get("Photos", 0) or 0)
+
+
+def _classify_mas_response(req: httpx.Response) -> str:
+    """Return ok | failed | rate_limited | bad_payload."""
+    location = (req.headers.get("Location") or "")
+    if req.status_code == 302 and location.startswith("https://www.google.com/sorry/index"):
+        return "failed"
+    if req.status_code in (429, 403):
+        return "rate_limited"
+    text = req.text or ""
+    if not text.startswith(")]}'"):
+        if "<!DOCTYPE" in text[:200].upper() or "<HTML" in text[:200].upper():
+            return "rate_limited" if req.status_code == 429 else "bad_payload"
+        return "bad_payload"
+    return "ok"
+
+
+async def _mas_get(
+    as_client: httpx.AsyncClient,
+    pb: str,
+    cookies: Optional[Dict[str, str]] = None,
+) -> Tuple[str, Optional[list]]:
+    """GET the Maps mas endpoint; return (status, parsed JSON list or None)."""
+    url = f"https://www.google.com/locationhistory/preview/mas?authuser=0&hl=en&gl=us&pb={pb}"
+    req = await as_client.get(url, cookies=cookies)
+    status = _classify_mas_response(req)
+    if status != "ok":
+        return status, None
+    try:
+        return "ok", json.loads(req.text[5:])
+    except (json.JSONDecodeError, TypeError):
+        return "bad_payload", None
+
+
+def _parse_stats(data: list) -> Dict[str, int]:
+    sec_block = _list_get(data, 16)
+    if not sec_block or not _list_get(sec_block, 8):
+        return {}
+    inner = sec_block[8]
+    if not inner or not isinstance(inner[0], list):
+        return {}
+    return {sec[6]: sec[7] for sec in inner[0] if isinstance(sec, list) and len(sec) > 7}
+
+
+def _parse_review_row(review_data: list, review: MapsReview) -> None:
+    """Fill review from a Maps mas row (legacy or reshaped layout)."""
+    if isinstance(review_data[6], list) and len(review_data[6]) > 2:
+        review.id = review_data[6][0]
+        review.date = datetime.utcfromtimestamp(review_data[6][1][3] / 1000000)
+        if len(review_data[6][2]) > 15 and review_data[6][2][15]:
+            review.comment = review_data[6][2][15][0][0]
+        review.rating = review_data[6][2][0][0]
+        loc = review_data[1]
+    elif isinstance(review_data[2], list) and len(review_data[2]) > 2:
+        review.id = review_data[2][0]
+        review.date = datetime.utcfromtimestamp(review_data[2][1][3] / 1000000)
+        if len(review_data[2][2]) > 15 and review_data[2][2][15]:
+            review.comment = review_data[2][2][15][0][0]
+        review.rating = review_data[2][2][0][0]
+        loc = review_data[4]
+    else:
+        raise IndexError("unknown review row shape")
+
+    review.location.id = loc[14][0]
+    review.location.name = loc[2]
+    review.location.address = loc[3]
+    review.location.tags = loc[4] if loc[4] else []
+    review.location.types = [x for x in loc[8] if x]
+    if loc[0]:
+        review.location.position.latitude = loc[0][2]
+        review.location.position.longitude = loc[0][3]
+
+
 def get_datetime(datepublished: str):
     """
         Get an approximative date from the maps review date
@@ -52,30 +127,29 @@ def get_datetime(datepublished: str):
 
     return (datetime.today() - delta).replace(microsecond=0, second=0)
 
-async def get_reviews(as_client: httpx.AsyncClient, gaia_id: str) -> Tuple[str, Dict[str, int], List[MapsReview], List[MapsPhoto]]:
+async def get_reviews(
+    as_client: httpx.AsyncClient,
+    gaia_id: str,
+    cookies: Optional[Dict[str, str]] = None,
+) -> Tuple[str, Dict[str, int], List[MapsReview], List[MapsPhoto]]:
     """Extracts the target's statistics, reviews and photos."""
     next_page_token = ""
     agg_reviews = []
     agg_photos = []
     stats = {}
 
-    req = await as_client.get(f"https://www.google.com/locationhistory/preview/mas?authuser=0&hl=en&gl=us&pb={gb.config.templates['gmaps_pb']['stats'].format(gaia_id)}")
-    if req.status_code == 302 and req.headers["Location"].startswith("https://www.google.com/sorry/index"):
+    status, data = await _mas_get(
+        as_client, gb.config.templates["gmaps_pb"]["stats"].format(gaia_id), cookies=cookies
+    )
+    if status == "failed":
         return "failed", stats, [], []
-
-    try:
-        data = json.loads(req.text[5:])
-    except (json.JSONDecodeError, TypeError):
+    if status == "rate_limited":
+        return "rate_limited", stats, [], []
+    if status != "ok" or not data:
         return "empty", stats, [], []
 
-    sec_block = _list_get(data, 16)
-    if not sec_block or not _list_get(sec_block, 8):
-        return "empty", stats, [], []
-    inner = sec_block[8]
-    if not inner or not isinstance(inner[0], list):
-        return "empty", stats, [], []
-    stats = {sec[6]: sec[7] for sec in inner[0] if isinstance(sec, list) and len(sec) > 7}
-    total_reviews = stats.get("Reviews", 0) + stats.get("Ratings", 0) + stats.get("Photos", 0)
+    stats = _parse_stats(data)
+    total_reviews = _stats_total(stats)
     if not total_reviews:
         return "empty", stats, [], []
 
@@ -84,13 +158,12 @@ async def get_reviews(as_client: httpx.AsyncClient, gaia_id: str) -> Tuple[str, 
             first = True
             while True:
                 if first:
-                    req = await as_client.get(f"https://www.google.com/locationhistory/preview/mas?authuser=0&hl=en&gl=us&pb={gb.config.templates['gmaps_pb'][category]['first'].format(gaia_id)}")
+                    pb = gb.config.templates["gmaps_pb"][category]["first"].format(gaia_id)
                     first = False
                 else:
-                    req = await as_client.get(f"https://www.google.com/locationhistory/preview/mas?authuser=0&hl=en&gl=us&pb={gb.config.templates['gmaps_pb'][category]['page'].format(gaia_id, next_page_token)}")
-                try:
-                    data = json.loads(req.text[5:])
-                except (json.JSONDecodeError, TypeError):
+                    pb = gb.config.templates["gmaps_pb"][category]["page"].format(gaia_id, next_page_token)
+                status, data = await _mas_get(as_client, pb, cookies=cookies)
+                if status != "ok" or not data:
                     break
 
                 new_reviews = []
@@ -99,9 +172,8 @@ async def get_reviews(as_client: httpx.AsyncClient, gaia_id: str) -> Tuple[str, 
 
                 # Reviews
                 if category == "reviews":
-                    reviews_root = _list_get(data, 24)
+                    reviews_root = _list_get(data, 24) or _list_get(data, 45)
                     if reviews_root is None:
-                        # Short / reshaped payload (Google often changes indices).
                         break
                     if not reviews_root:
                         return "private", stats, [], []
@@ -111,20 +183,7 @@ async def get_reviews(as_client: httpx.AsyncClient, gaia_id: str) -> Tuple[str, 
                     for review_data in reviews_data:
                         try:
                             review = MapsReview()
-                            review.id = review_data[6][0]
-                            review.date = datetime.utcfromtimestamp(review_data[6][1][3] / 1000000)
-                            if len(review_data[6][2]) > 15 and review_data[6][2][15]:
-                                review.comment = review_data[6][2][15][0][0]
-                            review.rating = review_data[6][2][0][0]
-
-                            review.location.id = review_data[1][14][0]
-                            review.location.name = review_data[1][2]
-                            review.location.address = review_data[1][3]
-                            review.location.tags = review_data[1][4] if review_data[1][4] else []
-                            review.location.types = [x for x in review_data[1][8] if x]
-                            if review_data[1][0]:
-                                review.location.position.latitude = review_data[1][0][2]
-                                review.location.position.longitude = review_data[1][0][3]
+                            _parse_review_row(review_data, review)
                             new_reviews.append(review)
                             bar()
                         except (IndexError, TypeError, KeyError, ValueError, ZeroDivisionError):
@@ -142,7 +201,7 @@ async def get_reviews(as_client: httpx.AsyncClient, gaia_id: str) -> Tuple[str, 
                     next_page_token = str(reviews_root[3]).strip("=")
 
                 # Photos
-                elif category == "photos" :
+                elif category == "photos":
                     photos_root = _list_get(data, 22)
                     if photos_root is None:
                         break
@@ -346,10 +405,20 @@ def output(err: str, stats: Dict[str, int], reviews: List[MapsReview], photos: L
 
     if err == "failed":
         print("\n[-] Your IP has been blocked by Google. Try again later.")
+        return
+
+    if err == "rate_limited":
+        print("\n[-] Google Maps rate-limited this request (HTTP 429).")
+        print("[~] Ensure `ghunt login` session is valid, wait a few minutes, then retry.")
+        if _stats_total(stats):
+            print("[~] Partial statistics were not retrieved; open the profile page above.")
+        return
 
     reviews_and_photos: List[MapsReview|MapsPhoto] = reviews + photos
-    if err != "private" and (err == "empty" or not reviews_and_photos):
-        print("\n[-] No review.")
+    activity = _stats_total(stats)
+
+    if err == "empty" or (not reviews_and_photos and not activity):
+        print("\n[-] No Maps reviews, ratings, or public photos found.")
         return
 
     print("\n[Statistics]")
@@ -359,6 +428,14 @@ def output(err: str, stats: Dict[str, int], reviews: List[MapsReview], photos: L
 
     if err == "private":
         print("\n[-] Reviews are private.")
+        return
+
+    if not reviews_and_photos and activity:
+        print(
+            "\n[!] Maps activity exists on this profile (see statistics), but Google did not "
+            "return review/photo details in the API response."
+        )
+        print("[~] Open the profile page above to read reviews and places manually.")
         return
 
     print("\n[Reviews]")
