@@ -311,4 +311,4 @@ def main():
 if __name__ == "__main__":
 
     main()
-st.sidebar.info('Power by eclogic')
+st.sidebar.info('Power by 051N773@M')

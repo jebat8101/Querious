@@ -102,4 +102,4 @@ elif option == "Clear saved credentials":
     if st.button("Clear Session Data"):
         os.remove("session_name.session") if os.path.exists("session_name.session") else None
         st.success("Session data cleared!")
-st.caption("Powered by Eclogic ")
+st.caption("Powered by 051N773@M ")

@@ -66,7 +66,7 @@ def main():
     st.markdown("""
     ---
     © 2025, All rights reserved. 
-    Developed by ECLOGIC.
+    Developed by 051N773@M.
     """)
 
 def search_google_cse(query, site=None):

@@ -131,4 +131,4 @@ if st.button("Search"):
         except Exception as e:
             st.error(f"An error occurred: {e}")
 
-st.caption("Powered by Eclogic")
+st.caption("Powered by 051N773@M")

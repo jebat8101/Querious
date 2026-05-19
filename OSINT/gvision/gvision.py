@@ -134,5 +134,5 @@ def gvision_app():
 # Footer with Copyright
     st.markdown("""
     ---
-    © 2025, All rights reserved. Developed by ECLOGIC.
+    © 2025, All rights reserved. Developed by 051N773@M.
     """)

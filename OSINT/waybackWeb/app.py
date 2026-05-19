@@ -96,5 +96,5 @@ if st.button("Query Tweets"):
 
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")
-st.caption("Powered by Eclogic ")
+st.caption("Powered by 051N773@M ")
 
